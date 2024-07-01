@@ -19,7 +19,7 @@ Our starting point will be a simple video call app built with Agora. This guide 
 
 If you do not have a grasp on Agora Fundamentals, you can take a look at the [Flutter quickstart guide within the documentation](https://docs.agora.io/en/video-calling/get-started/get-started-sdk?platform=flutter) or you could dive deeper with the full [Video Call with Agora Flutter course](https://course-demo-two.vercel.app/flutter).
 
-This guide will build upon a simple starter video call, which [you can find here](<add link here>).
+This guide will build upon a simple starter video call, which [you can find here](https://github.com/AgoraIO-Community/flutter_call_subtitles/tree/main/starter-app).
 
 The starter code has a landing screen with only one button that invites you to join a call. This call happens on a single channel called `test` (it's a demo, okay). You have the remote users' video, your local video, and an end-call button within the call screen. We add and remove the users from the view using the event handlers.
 
