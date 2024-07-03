@@ -11,17 +11,19 @@ At least 50% of people use subtitles when watching shows or movies. Sometimes it
 ## Prerequisites
 1. Flutter
 2. A developer account with [Agora](https://console.agora.io)
-3. Agora Speech-to-Text Server (Can use [this example server](https://github.com/tadaspetra/agora-server))
+3. Backend Server to communicate with Agora's Real Time Transcription (Can use [this example server](https://github.com/tadaspetra/agora-server))
 
 ## Project Setup
 
-Our starting point will be a simple video call app built with Agora. This guide assumes you have a fundamental understanding of how a simple video call works using Agora. 
+This guide assumes you have a fundamental understanding of how a simple video call works using Agora. 
 
 If you do not have a grasp on Agora Fundamentals, you can take a look at the [Flutter quickstart guide within the documentation](https://docs.agora.io/en/video-calling/get-started/get-started-sdk?platform=flutter) or you could dive deeper with the full [Video Call with Agora Flutter course](https://course-demo-two.vercel.app/flutter).
 
-This guide will build upon a simple starter video call, which [you can find here](https://github.com/AgoraIO-Community/flutter_call_subtitles/tree/main/starter-app).
+Our starting point for this guide will be a simple video call app built with Agora, which [you can find here](https://github.com/AgoraIO-Community/flutter_call_subtitles/tree/main/starter-app).
 
 The starter code has a landing screen with only one button that invites you to join a call. This call happens on a single channel called `test` (it's a demo, okay). You have the remote users' video, your local video, and an end-call button within the call screen. We add and remove the users from the view using the event handlers.
+
+![end call visual](images/endcall.png)
 
 ## Speech to Text
 Agora has a product called Real Time Transcription that you can enable to start transcribing the call of a specific channel.
@@ -30,7 +32,7 @@ Real-Time Transcription is a RESTful API that uses an AI microservice to connect
 
 ### Backend
 ![diagram of how the video call transcription works](images/backend.png)
-Real-Time Transcription should be implemented on your business server for a few reasons. With the backend controlling the microservices, you can ensure that only one instance of Real-Time Transcription runs within each channel. You also need to pass your token to the transcription service, so by doing it on the backend, you don't expose that token on the client side.
+Real-Time Transcription should be implemented on your business server. With the backend controlling the microservices, you can ensure that only one instance of Real-Time Transcription runs within each channel. You also need to pass your token to the transcription service, so by doing it on the backend, you don't expose that token on the client side.
 
 We will use [this server as our backend](https://github.com/tadaspetra/agora-server). This server exposes two endpoints: one for starting the transcription and another for ending it.
 
@@ -39,11 +41,6 @@ We will use [this server as our backend](https://github.com/tadaspetra/agora-ser
 /start-transcribing/<--Channel Name-->
 ```
 
-A successful response will contain the Task ID and the Builder Token, which you must save in your app since you will need to use it to stop the transcription.
-
-```
-{taskId: <--Task ID Value-->, builderToken: <--Builder Token Value-->}
-```
 #### Stop Real Time Transcription
 ```
 /stop-transcribing/<--Channel Name-->/<--Task ID-->/<--Builder Token-->
@@ -51,7 +48,7 @@ A successful response will contain the Task ID and the Builder Token, which you 
 
 
 ## Start Transcription within the Call
-To make a network call from your Flutter application, you can use the `http` package. Ensure you use the same App ID on both the app and the backend server. Then, call your API to start the transcribing. 
+To make a network call from your Flutter application, you can use the `http` package. Ensure you use the same App ID on both the front end app and the backend server, so that they are connected to the same Agora service. Then, call your API to start the transcribing. 
 
 Within the [`call.dart`](./lib/call.dart) file, you can add this `startTranscription` function:
 
@@ -73,7 +70,7 @@ Future<void> startTranscription({required String channelName}) async {
 
 We will call this function right after our join call method so that it starts as soon as the first user joins the channel. As part of a successful response, you will receive a Task ID and a Builder Token. Save these because you will need to use them to stop the transcription.
 
-When the transcription starts successfully, it acts as a "bot" has joined the call. It's not a real user, but it has its own UID, defined within your backend server. If you are using the [server I linked above](https://github.com/tadaspetra/agora-server), the UID is `101`. You can exclude this from the remote user's list in the `onUserJoined` event.
+When the transcription starts successfully, it behaves like a user in the channel. It's not a real user though, it's a bot. The service has its own UID, defined within your backend server. If you are using the [server I linked above](https://github.com/tadaspetra/agora-server), the UID is `101`. You can exclude this from the remote user's list in the `onUserJoined` event.
 
 ```dart
 onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
@@ -103,7 +100,7 @@ Future<void> stopTranscription() async {
 We will call the `stopTranscription` method in our call screen's `dispose` method. This will stop the transcription before we leave the channel and release the engine resource.
 
 ## Retrieve the Transcription
-You can access the transcription during the video call by using the `onStreamMessage` event in the event handler. 
+To access the transcription during the video call, use the `onStreamMessage` event in the event handler 
 
 ```dart
 onStreamMessage: (RtcConnection connection, int uid, int streamId,
@@ -171,7 +168,7 @@ onStreamMessage: (RtcConnection connection, int uid, int streamId,
 },
 ```
 
-Since we call `setState` every time a new word comes in our UI will be updated. We can display this String at the bottom of the screen with a white background, and we are done.
+We create a String variable called `subtitle` that will be displayed at the bottom of our screen. Whenever a new word is retrieved in the `onStreamMessage` callback, we will update that variable and trigger a rebuild to show the most up-to-date subtitles.
 
 ```dart
 Padding(
@@ -196,10 +193,12 @@ Padding(
 ),
 ```
 
+## Run the App
+With that we have a fully working video call with subtitles. Run this app using `flutter run`, click the button to join the "test" channel, and you will see subtitles showing up at the bottom of your screen as you speak.
 
-## Done
 ![Screenshots of the app we will build](images/subtitles.gif)
 
+## Done
 With that, we have built an application that triggers a Real-Time Transcription service as soon as someone joins the channel. Then, this transcript is dispayed live for the user as subtitles and now you no longer have to worry about missing the words that are being spoken.
 
 
