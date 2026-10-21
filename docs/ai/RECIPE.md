@@ -1,62 +1,48 @@
-# Flutter call subtitles
+# Flutter Call Subtitles
 
 ## Overview
 
 Add live subtitles to a Flutter RTC call by pairing Agora audio with a caption display workflow.
 
-Use this recipe when you want a working reference for Flutter, RTC audio, subtitles, mobile UI.
-
 Repository: [AgoraIO-Community/flutter_call_subtitles](https://github.com/AgoraIO-Community/flutter_call_subtitles)
 
-## Prerequisites
+## Prerequisites and Setup
 
-- An Agora account and project App ID.
-- The platform toolchain required by this repository.
-- A test device, simulator, browser, or runtime that supports the sample's audio/video path.
-- A second RTC client or sample instance for validating remote publish and subscribe behavior.
-
-## Configure
-
-Create or update the project configuration with:
-
-- `AGORA_APP_ID`
-
-For local testing, some Agora projects allow tokenless joins when App Certificate is disabled. For production, generate RTC tokens on a trusted server and renew them before expiration.
-
-For Flutter, configure platform permissions on both Android and iOS targets before joining.
-
-## Run The Sample
-
-Install Flutter dependencies, configure the Agora App ID for the supported platforms, then run the app on a device or simulator. Join the same channel from another client to verify local and remote media.
+1. Read `docs/SUBTITLES.md` and use Flutter with a Dart SDK compatible with `pubspec.yaml` (Dart >=3.4.0 <4.0.0).
+2. Configure a compatible transcription backend; the tutorial links an example server. It must use the same Agora App ID and implement the start/stop routes called by `lib/call.dart`.
+3. The completed `lib/call.dart` imports `lib/consts.dart`, which is absent from this checkout. Create that local configuration with the `appId` and `serverUrl` constants used by the source, using `starter-app/lib/consts.dart` as a naming reference.
+4. Platform runner directories are also absent. Integrate the sample into a Flutter Android/iOS app, supply the required platform permissions, and then run `flutter pub get` and `flutter run`. The landing screen joins channel `test`.
 
 ## What To Check
 
-- The app registers Agora RTC event handlers before joining a channel.
-- Local media preview or local audio state appears after permissions are granted.
-- Remote users are rendered or heard when they publish audio/video.
-- `user-published` or native user-joined callbacks are handled for each media type the sample supports.
-- Leaving the channel stops local capture and releases RTC resources.
+- Verify two clients join `test` and the backend starts one transcription task per channel.
+- Check decoded stream messages produce subtitles and the transcription bot is excluded from the displayed user list.
+- End the call and confirm the backend task stops and RTC resources release.
 
-## Production Notes
+## Integration Notes
 
-- Never ship an App Certificate or privileged token generator in a client app.
-- Renew tokens from the SDK expiration callback before the current token expires.
-- Use subscriber/audience roles for users who should not publish media.
-- Keep UID types consistent across clients in the same channel.
-- For browser-based samples, deploy over HTTPS except when testing on `localhost`; for native samples, validate camera, microphone, and audio routing permissions on target devices.
+This repository is tutorial source, not a complete runnable Flutter project. Its RTC join uses an empty token, and the backend routing/authorization must match the actual source. Add an authenticated token flow and coordinate transcription task ownership for production.
+
+Keep App Certificates, customer secrets and privileged token generation on a trusted backend for production. Use only your own test credentials while configuring historical demos; do not commit them. Preserve the sample's existing dependency versions and lifecycle until a separate migration is tested.
+
+## Source References
+
+- [docs/SUBTITLES.md](../../docs/SUBTITLES.md)
+- [lib/call.dart](../../lib/call.dart)
+- [lib/main.dart](../../lib/main.dart)
+- [pubspec.yaml](../../pubspec.yaml)
+- [starter-app/lib/consts.dart](../../starter-app/lib/consts.dart)
+
+## Validation Status
+
+This recipe was checked against the repository's source and setup documents. The platform build and live service/device flow have not been run as part of this documentation change. Complete the checks above in an environment with the required SDKs, hardware and service access before treating it as a validated deployment.
 
 ## Implementation Prompt
 
 ```text
-You are working in `AgoraIO-Community/flutter_call_subtitles`. Add or adapt this sample so a developer can run the flutter call subtitles end to end with Agora RTC.
+You are working in AgoraIO-Community/flutter_call_subtitles. Use docs/ai/RECIPE.md and its linked source files to adapt the Flutter Call Subtitles reference to this project.
 
-Goals:
-- Preserve the existing sample architecture and README commands.
-- Configure Agora credentials through environment variables or the platform-native configuration already used by the repo.
-- Register RTC event handlers before joining the channel.
-- Join a test channel, publish local media when the sample role allows it, and subscribe to remote users.
-- Clean up RTC resources when leaving the channel or closing the app.
-- Add production notes for token generation, renewal, and audience-only subscriber roles where applicable.
+Start by inspecting the actual sample directory and configuration described above. Resolve its listed missing prerequisites before claiming it is runnable. Preserve the existing architecture and compatible dependency versions. Implement the recipe's feature-specific flow, permissions and resource cleanup. Use a trusted backend for privileged credentials and tokens in production.
 
-Validate by running the project-specific build or launch command from the README and testing with a second client in the same channel.
+Run the repository-specific build or launch flow, then perform each What To Check item. Report the commands run, the observed results and anything blocked by service access, hardware or incomplete sample code. Do not claim live validation from a documentation or catalog build alone.
 ```
